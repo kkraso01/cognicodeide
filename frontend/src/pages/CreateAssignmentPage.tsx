@@ -38,7 +38,7 @@ export const CreateAssignmentPage: React.FC = () => {
   useEffect(() => {
     const fetchTeacherSettings = async () => {
       try {
-        const settings = await apiClient.get('/api/teacher/logging-settings');
+        const settings = await apiClient.get<LoggingSettings>('/api/teacher/logging-settings');
         setTeacherBaseSettings(settings);
       } catch (err) {
         console.error('Failed to fetch teacher settings:', err);

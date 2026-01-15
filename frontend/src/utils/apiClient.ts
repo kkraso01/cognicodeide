@@ -60,6 +60,18 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 
+// Export raw client methods for advanced usage (e.g., useCodeExecution hook)
+export const apiClientRaw = {
+  post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => 
+    apiClient.post<T>(url, data, config),
+  get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => 
+    apiClient.get<T>(url, config),
+  put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => 
+    apiClient.put<T>(url, data, config),
+  delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => 
+    apiClient.delete<T>(url, config),
+};
+
 // API endpoints
 export const api = {
   // Auth
@@ -122,7 +134,9 @@ export const api = {
   getStudentAttempts: (studentId: number) => 
     apiClient.get<any>(`/api/events/attempts/student/${studentId}`),
 
-  // Code execution
+  // Code execution (Phase 1/2: enqueue + poll pattern)
+  enqueueExecution: (data: any) => apiClient.post<any>('/api/execute', data),
+  pollExecution: (runId: number) => apiClient.get<any>(`/api/execute/${runId}`),
   executeCode: (data: { 
     language: string; 
     code?: string; 

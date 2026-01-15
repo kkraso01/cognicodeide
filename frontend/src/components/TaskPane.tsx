@@ -1,4 +1,6 @@
 import React from 'react';
+import { ExecutionOutput } from './ExecutionOutput';
+import { ExecutionState } from '../hooks/useCodeExecution';
 
 interface TaskPaneProps {
   assignment: any;
@@ -6,8 +8,7 @@ interface TaskPaneProps {
   onSubmit: () => void;
   onSave: () => void;
   onReset: () => void;
-  output: string;
-  isRunning: boolean;
+  execution: ExecutionState;
 }
 
 export const TaskPane: React.FC<TaskPaneProps> = ({
@@ -16,8 +17,7 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
   onSubmit,
   onSave,
   onReset,
-  output,
-  isRunning,
+  execution,
 }) => {
   if (!assignment) {
     return <div className="empty-state-message">No assignment selected</div>;
@@ -41,11 +41,11 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
       <div className="task-actions">
         <button
           onClick={onRun}
-          disabled={isRunning}
+          disabled={execution.isPolling}
           className="task-btn task-btn-run"
           title="Run code (Ctrl+Enter)"
         >
-          {isRunning ? 'Running...' : '▶ Run'}
+          {execution.isPolling ? 'Running...' : '▶ Run'}
         </button>
         
         <button 
@@ -74,11 +74,16 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
         </button>
       </div>
 
-      {output && (
-        <div className="task-output">
-          <div className="task-output-header">Output</div>
-          <pre className="task-output-content">{output}</pre>
-        </div>
+      {execution.status !== 'idle' && (
+        <ExecutionOutput
+          status={execution.status}
+          stdout={execution.stdout}
+          stderr={execution.stderr}
+          buildOutput={execution.buildOutput}
+          isPolling={execution.isPolling}
+          totalTime={execution.totalTime}
+          error={execution.error}
+        />
       )}
     </div>
   );

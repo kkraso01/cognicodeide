@@ -2,6 +2,9 @@
 Code execution service using Docker containers for isolation.
 Supports Python, Java, and C execution with resource limits.
 Handles custom build/run commands and dependency installation.
+
+Refactored for queue-based execution: ExecutorService.run_project() is the main
+entry point for worker jobs, returning a structured result dict.
 """
 import subprocess
 import tempfile
@@ -11,7 +14,7 @@ import shlex
 from typing import Dict, Any, List, Optional
 
 
-class CodeExecutor:
+class ExecutorService:
     """Execute code in isolated environment with resource limits."""
     
     # Resource limits
@@ -118,6 +121,130 @@ class CodeExecutor:
             }
     
     @staticmethod
+    async def run_project(
+        language: str,
+        files: List[Dict[str, str]],
+        stdin: str = "",
+        build_command: Optional[str] = None,
+        run_command: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Execute a multi-file project with optional build step.
+        
+        This is the main entry point for worker jobs. Returns a normalized result dict.
+        
+        Args:
+            language: Language (python, java, c, cpp)
+            files: List of {name, path, content, is_main?}
+            stdin: Standard input
+            build_command: Custom build command (overrides default)
+            run_command: Custom run command (overrides default)
+        
+        Returns:
+            {
+                'status': 'success|error|timeout|compilation_error',
+                'stdout': str,
+                'stderr': str,
+                'exit_code': int or None,
+                'execution_time': float,
+                'build_result': {
+                    'stdout': str,
+                    'stderr': str,
+                    'exit_code': int,
+                    'execution_time': float
+                } or None
+            }
+        """
+        
+        # Create temporary working directory
+        work_dir = tempfile.mkdtemp()
+        
+        try:
+            # Write all project files
+            await ExecutorService.write_project_files(work_dir, files)
+            
+            # Get default commands
+            defaults = ExecutorService.get_default_commands(language)
+            build_cmd = build_command or defaults['build']
+            run_cmd = run_command or defaults['run']
+            
+            build_result = None
+            
+            # Execute build command if specified
+            if build_cmd:
+                should_build = True
+                if language == 'python' and 'requirements.txt' in build_cmd:
+                    should_build = os.path.exists(os.path.join(work_dir, 'requirements.txt'))
+                
+                if should_build:
+                    build_result = await ExecutorService.execute_command(
+                        build_cmd,
+                        work_dir,
+                        timeout=120  # MAX_BUILD_TIME
+                    )
+                    
+                    if build_result['exit_code'] != 0:
+                        return {
+                            'status': 'compilation_error',
+                            'stdout': build_result['stdout'],
+                            'stderr': f"Build failed:\n{build_result['stderr']}",
+                            'exit_code': build_result['exit_code'],
+                            'execution_time': 0,
+                            'build_result': {
+                                'stdout': build_result['stdout'],
+                                'stderr': build_result['stderr'],
+                                'exit_code': build_result['exit_code'],
+                                'execution_time': build_result['execution_time']
+                            }
+                        }
+            
+            # Execute run command
+            if not run_cmd:
+                return {
+                    'status': 'error',
+                    'stdout': '',
+                    'stderr': f'No run command specified for {language}',
+                    'exit_code': -1,
+                    'execution_time': 0,
+                    'build_result': build_result
+                }
+            
+            run_result = await ExecutorService.execute_command(
+                run_cmd,
+                work_dir,
+                timeout=30,  # MAX_EXECUTION_TIME
+                input_data=stdin
+            )
+            
+            # Normalize status
+            if run_result['status'] == 'timeout':
+                status = 'timeout'
+            elif run_result['exit_code'] != 0:
+                status = 'error'
+            else:
+                status = 'success'
+            
+            return {
+                'status': status,
+                'stdout': run_result['stdout'],
+                'stderr': run_result['stderr'],
+                'exit_code': run_result['exit_code'],
+                'execution_time': run_result['execution_time'],
+                'build_result': {
+                    'stdout': build_result['stdout'],
+                    'stderr': build_result['stderr'],
+                    'exit_code': build_result['exit_code'],
+                    'execution_time': build_result['execution_time']
+                } if build_result else None
+            }
+            
+        finally:
+            # Clean up
+            import shutil
+            shutil.rmtree(work_dir, ignore_errors=True)
+    
+    # Backward compatibility: keep old name
+    @staticmethod
     async def execute_project(
         language: str,
         files: List[Dict[str, str]],
@@ -125,91 +252,14 @@ class CodeExecutor:
         custom_build_command: Optional[str] = None,
         custom_run_command: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Execute a multi-file project with optional build step."""
-        
-        # Create temporary working directory
-        work_dir = tempfile.mkdtemp()
-        
-        try:
-            # Write all project files
-            await CodeExecutor.write_project_files(work_dir, files)
-            
-            # Get default commands
-            defaults = CodeExecutor.get_default_commands(language)
-            build_command = custom_build_command or defaults['build']
-            run_command = custom_run_command or defaults['run']
-            
-            overall_start = time.time()
-            build_output = None
-            
-            # Execute build command if specified
-            if build_command:
-                # Check if build is needed (e.g., requirements.txt exists for Python)
-                should_build = True
-                if language == 'python' and 'requirements.txt' in build_command:
-                    should_build = os.path.exists(os.path.join(work_dir, 'requirements.txt'))
-                
-                if should_build:
-                    build_result = await CodeExecutor.execute_command(
-                        build_command,
-                        work_dir,
-                        timeout=CodeExecutor.MAX_BUILD_TIME
-                    )
-                    
-                    build_output = {
-                        'stdout': build_result['stdout'],
-                        'stderr': build_result['stderr'],
-                        'time': build_result['execution_time']
-                    }
-                    
-                    if build_result['exit_code'] != 0:
-                        return {
-                            'stdout': build_result['stdout'],
-                            'stderr': f"Build failed:\n{build_result['stderr']}",
-                            'exit_code': build_result['exit_code'],
-                            'execution_time': build_result['execution_time'],
-                            'status': 'build_error',
-                            'build_output': build_output
-                        }
-            
-            # Execute run command
-            if not run_command:
-                return {
-                    'stdout': '',
-                    'stderr': f'No run command specified for {language}',
-                    'exit_code': -1,
-                    'execution_time': 0,
-                    'status': 'error'
-                }
-            
-            run_result = await CodeExecutor.execute_command(
-                run_command,
-                work_dir,
-                timeout=CodeExecutor.MAX_EXECUTION_TIME,
-                input_data=input_data
-            )
-            
-            # Combine results
-            total_time = time.time() - overall_start
-            
-            result = {
-                'stdout': run_result['stdout'],
-                'stderr': run_result['stderr'],
-                'exit_code': run_result['exit_code'],
-                'execution_time': run_result['execution_time'],
-                'total_time': total_time,
-                'status': run_result['status'],
-            }
-            
-            if build_output:
-                result['build_output'] = build_output
-            
-            return result
-            
-        finally:
-            # Clean up
-            import shutil
-            shutil.rmtree(work_dir, ignore_errors=True)
+        """Deprecated: use run_project() instead."""
+        return await ExecutorService.run_project(
+            language=language,
+            files=files,
+            stdin=input_data,
+            build_command=custom_build_command,
+            run_command=custom_run_command
+        )
     
     @staticmethod
     async def execute_python(code: str, input_data: str = "") -> Dict[str, Any]:

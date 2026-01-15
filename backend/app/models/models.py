@@ -151,20 +151,54 @@ class AIInteraction(Base):
     attempt = relationship("Attempt", back_populates="ai_interactions")
 
 
+class RunStatus(str, enum.Enum):
+    """Status of a code execution job."""
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCESS = "success"
+    ERROR = "error"
+    TIMEOUT = "timeout"
+    COMPILATION_ERROR = "compilation_error"
+    CANCELLED = "cancelled"
+
+
 class Run(Base):
     __tablename__ = "runs"
     
     id = Column(Integer, primary_key=True, index=True)
-    attempt_id = Column(Integer, ForeignKey("attempts.id"), nullable=False)
-    code_snapshot = Column(Text, nullable=False)
+    attempt_id = Column(Integer, ForeignKey("attempts.id"), nullable=False, index=True)
+    
+    # Job state
+    status = Column(SQLEnum(RunStatus), nullable=False, default=RunStatus.QUEUED, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    started_at = Column(DateTime, nullable=True)
+    finished_at = Column(DateTime, nullable=True)
+    
+    # Build phase output
+    build_stdout = Column(Text, nullable=True)
+    build_stderr = Column(Text, nullable=True)
+    build_exit_code = Column(Integer, nullable=True)
+    build_time = Column(Float, nullable=True)
+    
+    # Run phase output
     stdout = Column(Text, nullable=True)
     stderr = Column(Text, nullable=True)
     exit_code = Column(Integer, nullable=True)
     run_time = Column(Float, nullable=True)  # execution time in seconds
-    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Snapshots & metadata
+    code_snapshot = Column(Text, nullable=True)  # Full code snapshot if ≤256KB
+    snapshot_hash = Column(String(64), nullable=True)  # SHA256 of files
+    request_json = Column(Text, nullable=True)  # Full request payload for reproducibility
     
     # Relationships
     attempt = relationship("Attempt", back_populates="runs")
+    
+    # Performance indexes
+    __table_args__ = (
+        Index('idx_runs_attempt_status', 'attempt_id', 'status'),
+        Index('idx_runs_created', 'created_at'),
+    )
 
 
 class UserTechniqueSequence(Base):

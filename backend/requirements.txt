@@ -12,3 +12,5 @@ python-multipart
 email-validator
 instructor
 openai
+arq>=0.25.0
+redis>=4.5.0

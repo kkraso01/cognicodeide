@@ -1,17 +1,49 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 from app.config import settings
 from app.database import init_db
+from app.services.execution_queue import get_queue_manager
 from app.routers import auth, assignments, events, ai, replay, teacher_settings, techniques, tasks
 from app.routers import execute
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize database on startup."""
+    """Manage app lifecycle: startup and shutdown."""
+    
+    # Startup
+    logger.info("Initializing COGNICODE API...")
     await init_db()
+    
+    # Start execution queue based on backend setting
+    if settings.QUEUE_BACKEND == "redis":
+        logger.info(f"Using Redis queue backend ({settings.REDIS_URL})")
+        logger.info("Worker must be running separately: python -m arq app.workers.execution_worker.WorkerSettings")
+        try:
+            from app.services.execution_queue import get_redis_pool
+            await get_redis_pool()
+            logger.info("Connected to Redis")
+        except Exception as e:
+            logger.error(f"Failed to connect to Redis: {e}. Make sure Redis is running.")
+    else:
+        logger.info("Using in-process queue backend (Phase 1)")
+        queue_manager = get_queue_manager()
+        await queue_manager.start_workers(num_workers=2)
+        logger.info("Execution queue workers started")
+    
     yield
+    
+    # Shutdown
+    logger.info("Shutting down COGNICODE API...")
+    if settings.QUEUE_BACKEND == "in-process":
+        queue_manager = get_queue_manager()
+        await queue_manager.shutdown()
+        logger.info("Execution queue workers stopped")
+    logger.info("COGNICODE API shut down complete")
 
 
 # Create FastAPI app
@@ -49,14 +81,22 @@ async def root():
     return {
         "message": "COGNICODE API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "queue": {
+            "max_concurrent": settings.MAX_CONCURRENT_EXECUTIONS,
+            "max_queue_size": settings.QUEUE_MAX_SIZE,
+            "throttle_seconds": settings.RUN_ENQUEUE_THROTTLE
+        }
     }
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "queue_size": get_queue_manager().get_queue_position()
+    }
 
 
 if __name__ == "__main__":

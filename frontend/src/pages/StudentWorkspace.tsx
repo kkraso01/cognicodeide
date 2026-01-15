@@ -7,6 +7,7 @@ import { AIPreferenceModal } from '../components/AIPreferenceModal';
 import { FileExplorer, FileNode } from '../components/FileExplorer';
 import { useAssignmentStore } from '../state/assignmentStore';
 import { useSessionLogger } from '../hooks/useSessionLogger';
+import { useCodeExecution } from '../hooks/useCodeExecution';
 import { api } from '../utils/apiClient';
 import { ParsonsPanel } from '../components/ParsonsPanel';
 import { LeadAndRevealPanel } from '../components/LeadAndRevealPanel';
@@ -26,8 +27,6 @@ export const StudentWorkspace: React.FC = () => {
   const [openTabs, setOpenTabs] = useState<FileNode[]>([]); // Track open files in tabs
   const [currentFile, setCurrentFile] = useState<FileNode | null>(null);
   const [code, setCode] = useState('');
-  const [output, setOutput] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
   const [showAIModal, setShowAIModal] = useState(() => {
     // Don't show modal if we already have an active attempt
     const stored = sessionStorage.getItem(`attempt_${assignmentId}`);
@@ -43,6 +42,9 @@ export const StudentWorkspace: React.FC = () => {
   });
   const [saveStatus, setSaveStatus] = useState<'saved' | 'submitted' | null>(null);
   const lastCodeRef = useRef('');
+
+  // Code execution with enqueue + poll pattern
+  const execution = useCodeExecution();
 
   const {
     isLogging,
@@ -367,77 +369,30 @@ export const StudentWorkspace: React.FC = () => {
   }, [isLogging, attemptId, logEdit, currentFile]);
 
   const handleRun = async () => {
-    if (!currentAssignment) return;
+    if (!currentAssignment || !attemptId) return;
     
-    setIsRunning(true);
-    setOutput('Running code...\n');
     logRun();
 
     try {
-      // Files array is already up-to-date from handleCodeChange
       // Prepare files for execution API
       const execFiles = files.map((file) => ({
         name: file.name,
+        path: file.path,
         content: file.content || '',
         is_main: file.path === currentFile?.path,
       }));
 
-      // Execute code with all files
-      const result = await api.executeCode({
+      // Enqueue code execution (hook handles polling automatically)
+      await execution.executeCode({
         language: currentAssignment.language,
         files: execFiles,
+        attempt_id: attemptId,
         build_command: currentAssignment.build_command,
         run_command: currentAssignment.run_command,
-        input_data: '',
+        stdin: '',
       });
-      
-      // Format output
-      let outputText = '';
-      
-      // Show build output if present
-      if (result.build_output) {
-        outputText += ' Build Phase:\n';
-        if (result.build_output.stdout) {
-          outputText += result.build_output.stdout + '\n';
-        }
-        if (result.build_output.stderr) {
-          outputText += ' Build warnings:\n' + result.build_output.stderr + '\n';
-        }
-        outputText += `Build time: ${result.build_output.execution_time.toFixed(3)}s\n\n`;
-      }
-      
-      // Show execution status
-      if (result.status === 'success') {
-        outputText += ' Execution completed successfully\n\n';
-      } else if (result.status === 'error') {
-        outputText += ' Execution failed\n\n';
-      } else if (result.status === 'timeout') {
-        outputText += ' Execution timed out\n\n';
-      } else if (result.status === 'compilation_error') {
-        outputText += ' Compilation error\n\n';
-      }
-      
-      // Show stdout
-      if (result.stdout) {
-        outputText += ' Output:\n';
-        outputText += result.stdout + '\n';
-      }
-      
-      // Show stderr
-      if (result.stderr) {
-        outputText += ' Errors:\n';
-        outputText += result.stderr + '\n';
-      }
-      
-      // Show execution stats
-      outputText += `\n Execution time: ${result.execution_time.toFixed(3)}s`;
-      outputText += `\n Exit code: ${result.exit_code}`;
-      
-      setOutput(outputText);
     } catch (error: any) {
-      setOutput(` Failed to execute code:\n${error.response?.data?.detail || error.message}`);
-    } finally {
-      setIsRunning(false);
+      console.error('Failed to enqueue code execution:', error);
     }
   };
 
@@ -450,7 +405,7 @@ export const StudentWorkspace: React.FC = () => {
       
       // Files array is already up-to-date from handleCodeChange
       // Submit with full project state (marks as finished)
-      await api.finishAttempt(attemptId, JSON.stringify(files));
+      await api.finishAttempt(attemptId as number, JSON.stringify(files));
       
       // DON'T clear sessionStorage - student can reopen and continue editing
       // The attempt remains accessible with all events
@@ -528,8 +483,7 @@ export const StudentWorkspace: React.FC = () => {
               onSubmit={handleSubmit}
               onSave={handleSave}
               onReset={handleReset}
-              output={output}
-              isRunning={isRunning}
+              execution={execution}
             />
           </div>
           

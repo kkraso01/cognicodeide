@@ -25,6 +25,28 @@ class Settings(BaseSettings):
     # Application
     DEBUG: bool = True
     
+    # Execution Queue (Phase 1: in-process)
+    MAX_CONCURRENT_EXECUTIONS: int = 4
+    QUEUE_MAX_SIZE: int = 200
+    EXECUTION_TIMEOUT: int = 30  # seconds
+    BUILD_TIMEOUT: int = 120  # seconds
+    RUN_ENQUEUE_THROTTLE: int = 2  # seconds between enqueues per attempt
+    SNAPSHOT_SIZE_THRESHOLD: int = 262144  # 256KB in bytes
+    
+    # Redis (Phase 2: for distributed queue)
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: str = ""
+    QUEUE_BACKEND: str = "in-process"  # "in-process" or "redis"
+    
+    @property
+    def REDIS_URL(self) -> str:
+        """Build Redis connection URL."""
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins into a list."""
