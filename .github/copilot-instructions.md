@@ -1,7 +1,7 @@
 # COGNICODE - AI Coding Agent Instructions
 
 ## Project Overview
-COGNICODE is an AI-assisted educational coding platform that records all student interactions for transparency and learning analysis. Teachers can replay sessions to assess engagement and AI reliance.
+COGNI`CODE is an AI-assisted educational coding platform that records all student interactions for transparency and learning analysis. Teachers can replay sessions to assess engagement and AI reliance.
 
 **Tech Stack:** React + TypeScript + Monaco Editor (frontend) | FastAPI + PostgreSQL (backend) | Docker (execution sandbox) | Ollama (remote AI)
 
