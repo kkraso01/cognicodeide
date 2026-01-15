@@ -1,0 +1,39 @@
+
+@startuml COGNICODE_Architecture
+
+title COGNICODE - System Architecture
+
+actor Student
+actor Teacher
+
+rectangle "Frontend (React + Monaco)" {
+    Student --> (Code Editor)
+    Student --> (AI Help Panel)
+    (Code Editor) --> (Session Logger)
+    (AI Help Panel) --> (FastAPI API Server)
+    (Code Editor) --> (FastAPI API Server)
+}
+
+rectangle "Backend (FastAPI)" {
+    (FastAPI API Server) --> (Auth Service)
+    (FastAPI API Server) --> (Assignment Manager)
+    (FastAPI API Server) --> (Event Logger)
+    (FastAPI API Server) --> (Replay API)
+    (FastAPI API Server) --> (AI Proxy Service)
+    (FastAPI API Server) --> (Execution Sandbox)
+}
+
+rectangle "Execution Sandbox" {
+    (Execution Sandbox) --> (gcc / javac / python3)
+}
+
+database "PostgreSQL" as DB
+storage "MinIO" as Storage
+
+(FastAPI API Server) --> DB
+(FastAPI API Server) --> Storage
+
+Teacher --> (Teacher Dashboard)
+(Teacher Dashboard) --> (Replay API)
+
+@enduml

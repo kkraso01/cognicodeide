@@ -1,0 +1,53 @@
+2025-11-20 12:08:24 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 12:08:24 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 12:08:24 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 12:08:24 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 12:08:29 - ai - INFO -  Parsons Problem Request - User: kkraso012, Model: mistral
+2025-11-20 12:08:29 - ai - INFO - [DEBUG] Using pre-patched ollama_client for Parsons
+2025-11-20 12:08:40 - ai - INFO -  Logged Parsons problem for attempt 34
+2025-11-20 12:09:51 - ai - INFO -  Parsons Problem Request - User: kkraso012, Model: mistral
+2025-11-20 12:09:51 - ai - INFO - [DEBUG] Using pre-patched ollama_client for Parsons
+2025-11-20 12:09:59 - ai - INFO -  Logged Parsons problem for attempt 34
+2025-11-20 13:53:22 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 13:53:22 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 13:53:22 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 13:53:23 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 13:53:55 - ai - INFO -  Parsons Problem Request - User: kkraso012, Model: mistral
+2025-11-20 13:53:55 - ai - INFO - [DEBUG] Using pre-patched ollama_client for Parsons
+2025-11-20 13:54:04 - ai - INFO -  Logged Parsons problem for attempt 35
+2025-11-20 14:19:21 - ai - INFO - [OllamaService] Request URL: https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 14:19:21 - ai - INFO - [OllamaService] Request Headers: {'Content-Type': 'application/json'}
+2025-11-20 14:19:21 - ai - INFO - [OllamaService] Request Payload: {"model": "mistral", "messages": [{"role": "user", "content": "hello"}], "stream": false}
+2025-11-20 14:19:25 - ai - INFO - Received response from Ollama (status: 200)
+2025-11-20 16:12:01 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 16:12:01 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 16:12:01 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 16:12:03 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 16:56:12 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 16:56:12 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 16:56:12 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 16:56:13 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:15:15 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:15:15 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:15:15 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:15:15 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:15:56 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:15:56 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:15:56 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:15:56 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:17:47 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:17:47 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:17:47 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:17:47 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:23:34 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:23:34 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:23:34 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:23:34 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:27:46 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:27:46 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:27:46 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:27:46 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
+2025-11-20 17:34:38 - ai - INFO - [STARTUP] OLLAMA_API_URL (full endpoint): https://chatucy.cs.ucy.ac.cy/ollama/v1/chat/completions
+2025-11-20 17:34:38 - ai - INFO - [STARTUP] OLLAMA_BASE_URL: https://chatucy.cs.ucy.ac.cy/ollama/v1
+2025-11-20 17:34:38 - ai - INFO - [STARTUP] AsyncOpenAI client created with base_url: https://chatucy.cs.ucy.ac.cy/ollama/v1/
+2025-11-20 17:34:38 - ai - INFO - [STARTUP] AsyncOpenAI client patched with instructor (JSON mode)
